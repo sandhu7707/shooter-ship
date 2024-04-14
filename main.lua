@@ -1,71 +1,61 @@
-push = require 'push'
-ship = require 'ship'
-interface = require 'interface'
-controls = require "controls"
-gameplay = require "gameplay"
+debug = require 'debug'
+background = require 'background'
+stateMachine = require "stateMachine"
 
 WINDOW_WIDTH, WINDOW_HEIGHT = love.window.getDesktopDimensions();
 
-WINDOW_WIDTH = WINDOW_WIDTH*0.8
 WINDOW_HEIGHT = WINDOW_HEIGHT*0.8
-
-VIRTUAL_WIDTH = WINDOW_WIDTH
-VIRTUAL_HEIGHT = WINDOW_HEIGHT
+WINDOW_WIDTH = WINDOW_WIDTH*0.8
 
 SCALE = 5
 
 gameState = "new"
-score = 0
+love.score = 0
 
 debugSwitch = false
 
+
 function love.load()
-    push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH,WINDOW_HEIGHT, {
+    love.window.setMode(WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false,
         resizable = true,
         vsync = -1
     })
-    mesh = ship:CreateShip()
 end
 
 function love.resize(w, h)
     WINDOW_WIDTH = w
     WINDOW_HEIGHT = h
-    push:resize(w, h)
 end
 
 function love.update(dt)
 
-    if gameState ~= "start" then
-        return
-    end
+    background:updateBackground(dt)
 
-    gameplay:execute(dt)
-
+    stateMachine:update(dt)
 end
 
 function love.draw()
-    push:apply('start')
     
-    interface:printScore()
+    background:drawBackground()
 
-    interface:printMessages()
-
-    ship:drawShip(mesh)
-
-    drawRocksAndLazers()
-
-
-    push:apply('end')
+    stateMachine:draw()
 end
 
+function love.mousepressed(x, y, button, istouch, presses)
+    LAUNCH_LAZER = true;
+end
 
-function drawRocksAndLazers()
-    for k,v in pairs(lazers) do
-        love.graphics.circle("fill", v.x, v.y, 2, SCALE, SCALE)
-    end
-    
-    for k,v in pairs(rocks) do
-        love.graphics.draw(v.val, v.x, v.y, 0, SCALE, SCALE)
+function love.mousereleased(x, y, button, istouch, presses)
+    LAUNCH_LAZER = false
+end
+
+function love.keypressed(key)
+    if key=="enter" or key=="return" then
+        stateMachine:changeState(stateMachine.states.play)
+    elseif key =="space" or key=="spacebar" then
+        stateMachine:changeState(stateMachine.states.pause)
+    elseif key =="D" or key=="d" then
+        debugSwitch = true
     end
 end

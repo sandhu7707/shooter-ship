@@ -1,22 +1,12 @@
 local ship = {
 
-    SHIP_DIMENSIONS = {width=20, height=10}
+    SHIP_DIMENSIONS = {width=20, height=10},
+    positionX = 0,
+    positionY = 0
 }
 
-function ship:drawShip(mesh)
-    if gameState == "over" then
-        return
-    end
-
-    local mx, my = love.mouse.getPosition()
-    mx = mx*VIRTUAL_WIDTH/WINDOW_WIDTH
-    my = my*VIRTUAL_HEIGHT/WINDOW_HEIGHT
-
-    love.graphics.draw(mesh, mx, my, 0, SCALE, SCALE)
-end
-
 function ship:CreateShip()
-    SHIP_DIMENSIONS = ship.SHIP_DIMENSIONS
+    local SHIP_DIMENSIONS = ship.SHIP_DIMENSIONS
 
     local vertices = {
         {-SHIP_DIMENSIONS.width/2,0,1,1},
@@ -28,20 +18,32 @@ function ship:CreateShip()
         {SHIP_DIMENSIONS.width/2,0,1,1}
     }
 
-    local mesh = love.graphics.newMesh(vertices, "strip")
-    return mesh;
+    return love.graphics.newMesh(vertices, "strip")
+end
+
+local mesh = ship:CreateShip()
+
+function ship:draw()
+    if gameState == "over" then
+        return
+    end
+
+    love.graphics.draw(mesh, ship.positionX, ship.positionY, 0, SCALE, SCALE)
+end
+
+function ship:update(dt)
+    local mx, my = love.mouse.getPosition()
+    ship.positionX = mx
+    ship.positionY = my - ship.SHIP_DIMENSIONS.height/2
 end
 
 function ship:getPosition()
-    local mx, my = love.mouse.getPosition()
-    mx = mx*VIRTUAL_WIDTH/WINDOW_WIDTH
-    my = my*VIRTUAL_HEIGHT/WINDOW_HEIGHT - ship.SHIP_DIMENSIONS.height/2
-    return mx, my
+    return ship.positionX, ship.positionY
 end
 
 function ship:detectCollision(v, radius)
     local mx, my = self:getPosition()
-    diffSquare = (radius+ship.SHIP_DIMENSIONS.width/2)^2 + (radius+ship.SHIP_DIMENSIONS.height/2)^2
+    local diffSquare = (radius+ship.SHIP_DIMENSIONS.width/2)^2 + (radius+ship.SHIP_DIMENSIONS.height/2)^2
 
     if ((v.x-mx)^2 + (v.y-my)^2) < diffSquare*SCALE*SCALE then
         return true
